@@ -1,0 +1,157 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://spring.io/guides/gs-producing-web-service"
+           targetNamespace="http://spring.io/guides/gs-producing-web-service" elementFormDefault="qualified">
+
+    <xs:complexType name="workerSoapDTO">
+        <xs:sequence>
+            <xs:element name="id" type="xs:int"/>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="creationDate" type="xs:string"/>
+            <xs:element name="salary" type="xs:double"/>
+            <xs:element name="startDate" type="xs:string"/>
+            <xs:element name="position" type="xs:string"/>
+            <xs:element name="status" type="xs:string"/>
+            <xs:element name="coordinates" type="tns:coordinatesSoapDTO"/>
+            <xs:element name="organization" type="tns:organizationSoapDTO"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="coordinatesSoapDTO">
+        <xs:sequence>
+            <xs:element name="x" type="xs:double"/>
+            <xs:element name="y" type="xs:double"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="townSoapDTO">
+        <xs:sequence>
+            <xs:element name="id" type="xs:int"/>
+            <xs:element name="x" type="xs:double"/>
+            <xs:element name="y" type="xs:double"/>
+            <xs:element name="name" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="officialAddressSoapDTO">
+        <xs:sequence>
+            <xs:element name="id" type="xs:int"/>
+            <xs:element name="zipCode" type="xs:string"/>
+            <xs:element name="town" type="tns:townSoapDTO"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="organizationSoapDTO">
+        <xs:sequence>
+            <xs:element name="id" type="xs:int"/>
+            <xs:element name="annualTurnover" type="xs:double"/>
+            <xs:element name="employeesCount" type="xs:long"/>
+            <xs:element name="officialAddress" type="tns:officialAddressSoapDTO"/>
+        </xs:sequence>
+    </xs:complexType>
+
+
+
+
+
+
+    <xs:element name="getWorkerRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="id" type="xs:int"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="getWorkerResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="worker" type="tns:workerSoapDTO"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+
+    <xs:element name="addWorkerRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="name" type="xs:string"/>
+                <xs:element name="xCoord" type="xs:string"/>
+                <xs:element name="yCoord" type="xs:string"/>
+                <xs:element name="salary" type="xs:string"/>
+                <xs:element name="startDate" type="xs:string"/>
+                <xs:element name="position" type="xs:string"/>
+                <xs:element name="status" type="xs:string"/>
+                <xs:element name="organizationId" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="addWorkerResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="worker" type="tns:workerSoapDTO"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+
+    <xs:element name="updWorkerRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="name" type="xs:string"/>
+                <xs:element name="xCoord" type="xs:string"/>
+                <xs:element name="yCoord" type="xs:string"/>
+                <xs:element name="salary" type="xs:string"/>
+                <xs:element name="startDate" type="xs:string"/>
+                <xs:element name="position" type="xs:string"/>
+                <xs:element name="status" type="xs:string"/>
+                <xs:element name="organizationId" type="xs:string"/>
+                <xs:element name="id" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="updWorkerResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="worker" type="tns:workerSoapDTO"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+
+    <xs:element name="filterWorkersRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="size" type="xs:string"/>
+                <xs:element name="page" type="xs:string"/>
+                <xs:element name="filter" type="xs:string"/>
+                <xs:element name="sort" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="filterWorkersResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="workers" type="tns:workerSoapDTO" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+
+    <xs:element name="deleteWorkerRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="id" type="xs:int"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="deleteWorkerResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="status" type="xs:string" />
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

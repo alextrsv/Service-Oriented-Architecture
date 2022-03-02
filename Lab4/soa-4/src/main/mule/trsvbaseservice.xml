@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd">
+    <http:listener-config name="trsvbaseservice-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="trsvbaseservice-config" api="trsvbaseservice.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <wsc:config name="Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="2b897326-462e-4c29-9d45-994e6fde7d5e" >
+		<wsc:connection wsdlLocation="http://localhost:8080/ws/countries.wsdl" service="CountriesPortService" port="CountriesPortSoap11" address="http://localhost:8080/ws" >
+			<wsc:web-service-security actor="http://schemas.xmlsoap.org/soap/actor/next" />
+		</wsc:connection>
+	</wsc:config>
+	<flow name="trsvbaseservice-main">
+        <http:listener config-ref="trsvbaseservice-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="trsvbaseservice-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="trsvbaseservice-console">
+        <http:listener config-ref="trsvbaseservice-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="trsvbaseservice-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="put:\workers:trsvbaseservice-config">
+        <logger level="INFO" message="put:\workers:trsvbaseservice-config" />
+		<set-variable value="#[attributes.queryParams.id]" doc:name="id" doc:id="b8793dba-740c-46e7-81d2-0819f5171375" variableName="id"/>
+		<set-variable value="#[attributes.queryParams.xCoord]" doc:name="xCoord" doc:id="502004d1-cf19-4a49-8fbb-92f3f6df1723" variableName="xCoord"/>
+		<set-variable value="#[attributes.queryParams.yCoord]" doc:name="yCoord" doc:id="2979bf0e-9c5e-4f4f-8829-5f20023e96af" variableName="yCoord"/>
+		<set-variable value="#[attributes.queryParams.name]" doc:name="name" doc:id="9e941a9f-24fd-479b-b0e9-072d5bf4b21a" variableName="name"/>
+		<set-variable value="#[attributes.queryParams.salary]" doc:name="salary" doc:id="5beb4ce2-2c27-4905-96c4-4466b27ddcfe" variableName="salary"/>
+		<set-variable value="#[attributes.queryParams.startDate]" doc:name="startDate" doc:id="589bfea1-cb71-4de0-b6f2-05918f1b383c" variableName="startDate"/>
+		<set-variable value="#[attributes.queryParams.position]" doc:name="position" doc:id="f6497b6c-bb7a-431a-bbbe-f690522a5670" variableName="position"/>
+		<set-variable value="#[attributes.queryParams.status]" doc:name="status" doc:id="2d6fb58a-c132-40b4-b2f8-852a7b4b3b76" variableName="status"/>
+		<set-variable value="#[attributes.queryParams.organizationId]" doc:name="organizationId" doc:id="26cd8437-dc2d-4a5e-8a6f-8a198f9a4eb6" variableName="organizationId" />
+		<ee:transform doc:name="Transform Message" doc:id="ea83fc5e-6108-443c-91cf-5712543d4334" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http://spring.io/guides/gs-producing-web-service
+---
+{
+	ns0#updWorkerRequest: {
+		ns0#name: vars.name as String|Null,
+		ns0#xCoord: vars.xCoord as String|Null,
+		ns0#yCoord: vars.yCoord as String|Null,
+		ns0#salary: vars.salary as String|Null,
+		ns0#startDate: vars.startDate as String|Null,
+		ns0#position: vars.position as String|Null,
+		ns0#status: vars.status as String|Null,
+		ns0#organizationId: vars.organizationId as String|Null,
+		ns0#id: vars.id
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<wsc:consume doc:name="Consume" doc:id="09f4ba53-751d-4e4b-abcf-361000c9b1c3" config-ref="Web_Service_Consumer_Config" operation="updWorker"/>
+		<ee:transform doc:name="Transform Message" doc:id="33ee9255-77b1-4ee3-8db9-7e0ffde452c0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0ns ns0 http://spring.io/guides/gs-producing-web-service
+
+output application/json
+---
+payload.body.ns0#updWorkerResponse.ns0#worker]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+    </flow>
+    <flow name="delete:\workers\(id):trsvbaseservice-config">
+        <logger level="INFO" message="delete:\workers\(id):trsvbaseservice-config" />
+		<set-variable value="#[attributes.uriParams.id]" doc:name="id" doc:id="cda4801e-c1aa-4eaa-915f-bd87dcc1f8f6" variableName="id" />
+		<ee:transform doc:name="Transform Message" doc:id="ee00254e-6428-41f7-acde-8698d858660a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http://spring.io/guides/gs-producing-web-service
+---
+{
+	ns0#deleteWorkerRequest: {
+		ns0#id: vars.id
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<wsc:consume operation="deleteWorker" doc:name="Consume" doc:id="f5b5dbde-cba5-4434-a14f-1152fbb1a178" config-ref="Web_Service_Consumer_Config" />
+		<ee:transform doc:name="Transform Message" doc:id="e20c0399-fcf8-4830-9aa4-c4904b211dc7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0ns ns0 http://spring.io/guides/gs-producing-web-service
+output application/json
+---
+payload.body.ns0#deleteWorkerResponse.ns0#status]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+    </flow>
+    <flow name="options:\workers:trsvbaseservice-config">
+        <logger level="INFO" message="options:\workers:trsvbaseservice-config" />
+    </flow>
+	<flow name="options:\workers\(id):trsvbaseservice-config">
+        <ee:transform>
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="options:\workers\(id):trsvbaseservice-config" />
+    </flow>
+	<flow name="get:\workers:trsvbaseservice-config">
+		<logger level="INFO" message="get:\workers:trsvbaseservice-config" />
+		<set-variable value="#[attributes.queryParams.size]" doc:name="size" doc:id="3c19cea8-040b-4c64-a1ae-26519b9c6f2a" variableName="size"/>
+		<set-variable value="#[attributes.queryParams.page as String|Null]" doc:name="page" doc:id="f2501e57-6349-43d8-9499-70a0de5f0d82" variableName="page"/>
+		<set-variable value="#[attributes.queryParams.filter as String|Null]" doc:name="filter" doc:id="fa5b294b-f772-4a91-802b-cef7d212da59" variableName="filter"/>
+		<set-variable value="#[attributes.queryParams.sort as String|Null]" doc:name="sort" doc:id="48972288-da64-46e4-a7dc-b1a858f6572d" variableName="sort"/>
+		<ee:transform doc:name="Transform Message" doc:id="f1195226-535a-4b69-bf14-f26188fcf2e6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http://spring.io/guides/gs-producing-web-service
+---
+{
+	ns0#filterWorkersRequest: {
+		ns0#size: vars.size as String|Null,
+		ns0#page: vars.page as String|Null,
+		ns0#filter: vars.filter as String|Null,
+		ns0#sort: vars.sort as String|Null
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<wsc:consume doc:name="Consume" doc:id="1ab4b4cf-32f0-4f4e-965a-fc699f5a23d9" config-ref="Web_Service_Consumer_Config" operation="filterWorkers"/>
+		<ee:transform doc:name="Transform Message" doc:id="688dba73-0dde-4c8e-993b-57e549269901" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0ns ns0 http://spring.io/guides/gs-producing-web-service
+
+output application/json
+---
+payload.body.ns0#filterWorkersResponse.*workers map (it, i) -> {	id: it.id,	name: it.name,	creationDate: it.creationDate,	salary: it.salary,	startDate: it.startDate,	position: it.position, 	status: it.status,	coordinates: it.coordinates,	organization: it.organization,	}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="Copy_of_On Error Propagate" doc:id="5b96b7d5-e146-4154-a46a-e0592eff2a60" >
+				<set-variable value="400" doc:name="Copy_of_err" doc:id="69173cdf-5e9e-48d6-9969-be8daf547668" variableName="httpStatus" />
+				<ee:transform doc:name="Copy_of_Transform Message" doc:id="c9bc8bb5-43d2-4c3a-a5b9-4385d74dd652" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+error.detailedDescription]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+    </flow>
+    <flow name="get:\workers\(id):trsvbaseservice-config">
+        <logger level="INFO" message="get:\workers\(id):trsvbaseservice-config" />
+		<set-variable value="#[attributes.uriParams.id]" doc:name="id" doc:id="a7b23098-99fd-4686-ad7e-7c79d8438dd8" variableName="id"/>
+		<ee:transform doc:name="Transform Message" doc:id="b4c20b4a-d9ca-497c-9cf9-f5e914ecad4f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http://spring.io/guides/gs-producing-web-service
+---
+{
+	ns0#getWorkerRequest: {
+		ns0#id: vars.id
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<wsc:consume operation="getWorker" doc:name="Consume" doc:id="094a844a-b1f9-4516-846e-7de965dba626" config-ref="Web_Service_Consumer_Config"/>
+		<ee:transform doc:name="Transform Message" doc:id="80d3f507-9114-440e-8e25-5519ef744ac6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0ns ns0 http://spring.io/guides/gs-producing-web-service
+output application/json
+---
+payload.body.ns0#getWorkerResponse.ns0#worker]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="5fa296d3-f813-459c-92fd-450f3588b42f" >
+				<set-variable value="400" doc:name="err" doc:id="49562265-590b-4141-9148-724afdbf7bb7" variableName="httpStatus"/>
+				<ee:transform doc:name="Transform Message" doc:id="5e0e9dff-4d8d-4449-b840-c1c8b1f387df" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+error.detailedDescription]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+    </flow>
+	<flow name="post:\workers:trsvbaseservice-config">
+        <logger level="INFO" message="post:\workers:trsvbaseservice-config" />
+		<set-variable value="#[attributes.queryParams.name]" doc:name="name" doc:id="fd08d52f-28bf-4822-9534-cc981c3f3df1" variableName="name"/>
+		<set-variable value="#[attributes.queryParams.xCoord]" doc:name="xCoord" doc:id="89b59349-b12b-493a-a69d-0052956d5fbb" variableName="xCoord" />
+		<set-variable value="#[attributes.queryParams.yCoord]" doc:name="yCoord" doc:id="f37611e4-81d7-4691-aab1-531d7a55f0af" variableName="yCoord" />
+		<set-variable value="#[attributes.queryParams.salary]" doc:name="salary" doc:id="980458f8-e19a-498e-99df-573094371ac0" variableName="salary" />
+		<set-variable value="#[attributes.queryParams.startDate]" doc:name="startDate" doc:id="191f92d5-1b0c-4a6d-997a-95bacb895fd2" variableName="startDate" />
+		<set-variable value="#[attributes.queryParams.position]" doc:name="position" doc:id="1ca3f104-e77b-4bc7-89d9-58e4f5b7231d" variableName="position" />
+		<set-variable value="#[attributes.queryParams.status]" doc:name="status" doc:id="eafa1034-5b32-4025-9938-1c571f413328" variableName="status" />
+		<set-variable value="#[attributes.queryParams.organizationId]" doc:name="organizationId" doc:id="f3b97c4b-5034-455d-9499-4c4dd7dcf440" variableName="organizationId" />
+		<ee:transform doc:name="Transform Message" doc:id="0a7f6b9d-a71d-4541-b901-913c2af86335" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http://spring.io/guides/gs-producing-web-service
+---
+{
+	ns0#addWorkerRequest: {
+		ns0#name: vars.name,
+		ns0#xCoord: vars.xCoord as String,
+		ns0#yCoord: vars.yCoord as String,
+		ns0#salary: vars.salary as String,
+		ns0#startDate: vars.startDate,
+		ns0#position: vars.position,
+		ns0#status: vars.status,
+		ns0#organizationId: vars.organizationId as String
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<wsc:consume doc:name="Consume" doc:id="e06c84c3-a44b-47c6-8ba3-1217e88063e9" config-ref="Web_Service_Consumer_Config" operation="addWorker"/>
+		<ee:transform doc:name="Transform Message" doc:id="75fc744f-5c13-4bbe-acf2-84b89a8ffea6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0ns ns0 http://spring.io/guides/gs-producing-web-service
+
+output application/json
+---
+payload.body.ns0#addWorkerResponse.ns0#worker]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+    </flow>
+</mule>

@@ -1,0 +1,124 @@
+#%RAML 1.0
+title: TrsvBaseService
+
+mediaType:
+  - application/json
+protocols:
+  - HTTP
+baseUri: /api
+version: "2.0"
+/workers/{id}:
+  get:
+    displayName: get specific worker
+    responses:
+      200:
+        body:
+          type: object
+      404:
+        body:
+          type: object
+    securedBy: []  
+  delete:
+    displayName: delete specific person
+    responses:
+      200:
+        body:
+          type: object
+      404:
+        body:
+          type: object
+    securedBy: []
+  options:
+    displayName: for mule correct working porpuse
+    responses:
+      200: {}
+    securedBy: []
+  uriParameters:
+    id:
+      type: number
+      format: int
+/workers:
+  get:
+    displayName: get all workers
+    responses:
+      200:
+        body:
+          type: object
+      400:
+        body:
+          type: object
+    securedBy: []
+    queryParameters:
+      size?:
+        type: string
+      page?:
+        type: string
+      filter?:
+        type: string
+      sort?:
+        type: string
+  post:
+    displayName: add worker
+    responses:
+      200:
+        body:
+          type: object
+      400:
+        body:
+          type: object
+    securedBy: []
+    queryParameters:
+      name:
+        type: string
+      xCoord:
+        type: number
+        format: double
+      yCoord:
+        type: number
+        format: double
+      salary:
+        type: number
+        format: int
+      startDate:
+        type: string
+      position:
+        type: string
+      status:
+        type: string
+      organizationId:
+        type: number
+        format: int
+  put:
+    displayName: modify specific worker
+    responses:
+      200:
+        body:
+          type: object
+      404:
+        body:
+          type: object
+    securedBy: []
+    queryParameters:
+      id:
+        type: string
+      xCoord?:
+        type: string
+      yCoord?:
+        type: string
+      name?:
+        type: string
+      salary?:
+        type: string
+      startDate?:
+        type: string
+      position?:
+        type: string
+      status?:
+        type: string
+      organizationId?:
+        type: string
+  options:
+    displayName: for mule correct working porpuse
+    responses:
+      200: {}
+    securedBy: []
