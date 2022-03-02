@@ -1,0 +1,13 @@
+server:
+  port: 8002
+
+spring:
+  # Name of application, used by config server
+  application:
+    name: workerAPI
+
+# Location of config server
+#  cloud:
+#    config:
+#      uri: http://localhost:8888
+#      fail-fast: true
